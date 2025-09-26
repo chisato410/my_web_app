@@ -1,4 +1,3 @@
-// lib/pages/register_confirm_page.dart
 import 'package:flutter/material.dart';
 import '../../models/user_registration.dart';
 
