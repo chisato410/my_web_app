@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'register_page.dart'; // 追加
+import 'register_page.dart';
+import '../home/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,10 +20,28 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      ScaffoldMessenger.of(
+
+      if (!mounted) return;
+
+      // SnackBarを表示 → 消えるまで待つ
+      await ScaffoldMessenger.of(context)
+          .showSnackBar(
+            const SnackBar(
+              content: Text("ログイン成功！"),
+              duration: Duration(seconds: 2), // 2秒間表示
+            ),
+          )
+          .closed;
+
+      if (!mounted) return;
+
+      // SnackBarが消えたあとにホーム画面へ遷移
+      Navigator.pushReplacement(
         context,
-      ).showSnackBar(const SnackBar(content: Text("ログイン成功！")));
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("ログイン失敗: ${e.message}")));
@@ -31,6 +50,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _resetPassword() async {
     if (_emailController.text.trim().isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("メールアドレスを入力してください")));
@@ -40,10 +60,13 @@ class _LoginPageState extends State<LoginPage> {
       await FirebaseAuth.instance.sendPasswordResetEmail(
         email: _emailController.text.trim(),
       );
+
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("パスワード再設定メールを送信しました")));
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("送信エラー: ${e.message}")));
@@ -72,18 +95,12 @@ class _LoginPageState extends State<LoginPage> {
                 decoration: const InputDecoration(labelText: "パスワード"),
               ),
               const SizedBox(height: 24),
-
-              // ログインボタン
               ElevatedButton(onPressed: _login, child: const Text("ログイン")),
               const SizedBox(height: 16),
-
-              // パスワードリセット
               TextButton(
                 onPressed: _resetPassword,
                 child: const Text("パスワードをお忘れの方はこちら"),
               ),
-
-              // 新規登録へ
               TextButton(
                 onPressed: () {
                   Navigator.push(
