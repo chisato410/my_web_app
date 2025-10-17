@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  supabase_flutter: ^2.5.6
   http: ^1.2.2
   shared_preferences: ^2.2.2
   firebase_core: ^3.15.2
@@ -93,3 +94,16 @@ flutter:
   # see https://flutter.dev/to/font-from-package
   assets:
     - assets/images/name.png
+    - assets/images/notice.png
+    - assets/images/card1.png
+    - assets/images/card2.png
+    - assets/images/card3.png
+    - assets/images/card4.png
+    - assets/images/card5.png
+    - assets/images/card6.png
+    - assets/images/quiz.png
+    - assets/icons/home.png
+    - assets/icons/disaster.png
+    - assets/icons/point.png
+    - assets/icons/mypage.png
+    - assets/icons/alert.png
