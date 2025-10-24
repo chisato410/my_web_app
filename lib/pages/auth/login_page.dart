@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // ← 名前衝突を防ぐ
+import '../../data/dummy_users.dart'; // ← 独自Userモデルをimport！
+import '../navigation/main_navigation.dart';
 import 'register_page.dart';
-import '../home/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,31 +17,52 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _login() async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      // Firebase認証でログイン
+      await firebase_auth.FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
       if (!mounted) return;
 
-      // SnackBarを表示 → 消えるまで待つ
+      // ログイン成功のスナックバー
       await ScaffoldMessenger.of(context)
           .showSnackBar(
             const SnackBar(
               content: Text("ログイン成功！"),
-              duration: Duration(seconds: 2), // 2秒間表示
+              duration: Duration(seconds: 2),
             ),
           )
           .closed;
 
       if (!mounted) return;
 
-      // SnackBarが消えたあとにホーム画面へ遷移
+      // Firebaseのユーザーを取得
+      final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
+
+      if (firebaseUser == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("ユーザー情報を取得できませんでした")));
+        return;
+      }
+
+      // ✅ アプリ用の User モデルを作成（dummy_users.dart の User）
+      final appUser = User(
+        id: firebaseUser.uid,
+        name: firebaseUser.email ?? "未設定ユーザー",
+        password: "",
+        initial: firebaseUser.email != null && firebaseUser.email!.isNotEmpty
+            ? firebaseUser.email![0].toUpperCase()
+            : "U",
+      );
+
+      // ✅ MainNavigation に渡して遷移
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
+        MaterialPageRoute(builder: (context) => MainNavigation(user: appUser)),
       );
-    } on FirebaseAuthException catch (e) {
+    } on firebase_auth.FirebaseAuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -56,8 +78,9 @@ class _LoginPageState extends State<LoginPage> {
       ).showSnackBar(const SnackBar(content: Text("メールアドレスを入力してください")));
       return;
     }
+
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
+      await firebase_auth.FirebaseAuth.instance.sendPasswordResetEmail(
         email: _emailController.text.trim(),
       );
 
@@ -65,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("パスワード再設定メールを送信しました")));
-    } on FirebaseAuthException catch (e) {
+    } on firebase_auth.FirebaseAuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
