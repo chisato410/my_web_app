@@ -1,0 +1,224 @@
+import 'package:flutter/material.dart';
+
+class BichikuForm extends StatefulWidget {
+  final String? initialName;
+  final String? initialDate;
+  final String? initialCategory;
+  final bool isEditingPreset;
+  final Function(Map<String, dynamic>) onSave;
+  final Function()? onDelete;
+  final List<String> categories;
+
+  const BichikuForm({
+    super.key,
+    this.initialName,
+    this.initialDate,
+    this.initialCategory,
+    required this.isEditingPreset,
+    required this.onSave,
+    this.onDelete,
+    required this.categories,
+  });
+
+  @override
+  State<BichikuForm> createState() => _BichikuFormState();
+}
+
+class _BichikuFormState extends State<BichikuForm> {
+  late final TextEditingController _nameController;
+  String? selectedDate;
+  String? selectedCategory;
+  bool noExpiry = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialName ?? '');
+    selectedDate = widget.initialDate;
+    selectedCategory = widget.initialCategory ?? widget.categories.first;
+    noExpiry = widget.initialDate == '期限なし';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: now,
+      lastDate: DateTime(2100),
+      initialDate: now,
+    );
+
+    if (!mounted) return;
+
+    if (picked != null) {
+      setState(() {
+        selectedDate =
+            '${picked.year}/${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}';
+        noExpiry = false;
+      });
+    }
+  }
+
+  Future<void> _deleteItem() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('削除確認'),
+        content: const Text('この項目を削除しますか？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              '削除する',
+              style: TextStyle(color: Colors.redAccent),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (shouldDelete == true) {
+      // 親へ削除を通知（親がNavigator.popを呼ぶ）
+      widget.onDelete?.call();
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('項目を削除しました')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isPreset = widget.isEditingPreset;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        top: 24,
+        left: 24,
+        right: 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isPreset ? '期限の登録・編集' : '新しい備蓄品を追加',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            if (!isPreset)
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: '品名を入力',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+
+            if (!isPreset) const SizedBox(height: 16),
+
+            DropdownButtonFormField<String>(
+              value: widget.categories.contains(selectedCategory)
+                  ? selectedCategory
+                  : widget.categories.first,
+              decoration: const InputDecoration(
+                labelText: 'ジャンルを選択',
+                border: OutlineInputBorder(),
+              ),
+              items: widget.categories
+                  .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedCategory = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    noExpiry ? '期限なし' : (selectedDate ?? '期限を選択'),
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: _selectDate,
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      noExpiry = true;
+                      selectedDate = '期限なし';
+                    });
+                  },
+                  child: const Text('期限なしにする'),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFB4C57E),
+                  ),
+                  onPressed: () {
+                    final name = _nameController.text.isNotEmpty
+                        ? _nameController.text
+                        : widget.initialName;
+                    if (name != null) {
+                      final newItem = {
+                        'name': name,
+                        'date': noExpiry ? '期限なし' : selectedDate,
+                        'category': selectedCategory,
+                      };
+                      widget.onSave(newItem);
+                      Navigator.pop(context, newItem);
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('$name を登録しました')));
+                    }
+                  },
+                  child: const Text('登録する'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('キャンセル'),
+                ),
+                if (isPreset)
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.redAccent),
+                    onPressed: _deleteItem,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}

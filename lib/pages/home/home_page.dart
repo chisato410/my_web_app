@@ -1,19 +1,72 @@
+// home_page.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/news.dart';
 
-/// ホーム画面本体
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _quizAvailable = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkQuizStatus();
+  }
+
+  Future<void> _checkQuizStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastPlayed = prefs.getString('lastQuizDate');
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    setState(() {
+      _quizAvailable = lastPlayed != today;
+    });
+  }
+
+  Future<void> _markQuizPlayed() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    await prefs.setString('lastQuizDate', today);
+    setState(() => _quizAvailable = false);
+  }
+
+  void _handleQuizTap(BuildContext context) {
+    if (_quizAvailable) {
+      _markQuizPlayed();
+      Navigator.pushNamed(context, '/quiz');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('クイズは1日1回だよ！また明日挑戦してね！'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: _HomeContent());
+    return Scaffold(
+      body: _HomeContent(
+        quizAvailable: _quizAvailable,
+        onQuizTap: () => _handleQuizTap(context),
+      ),
+    );
   }
 }
 
-/// ホーム画面の中身（既存UI復元）
+/// ホーム画面の中身
 class _HomeContent extends StatelessWidget {
-  const _HomeContent();
+  final bool quizAvailable;
+  final VoidCallback onQuizTap;
+
+  const _HomeContent({required this.quizAvailable, required this.onQuizTap});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +80,7 @@ class _HomeContent extends StatelessWidget {
             Image.asset('assets/images/name.png', height: 40),
             const SizedBox(height: 20),
 
-            // おしらせ見出し
+            // おしらせ
             Padding(
               padding: const EdgeInsets.only(top: 30),
               child: Row(
@@ -48,7 +101,7 @@ class _HomeContent extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // ニュースリスト（モックデータ3件程度表示）
+            // ニュースリスト
             Column(
               children: mockNews.take(3).map((news) {
                 return ListTile(
@@ -79,7 +132,7 @@ class _HomeContent extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => Scaffold(
                           appBar: AppBar(title: Text(news.title)),
-                          body: Center(child: Text('ニュース詳細ページをここに作成')),
+                          body: const Center(child: Text('ニュース詳細ページをここに作成')),
                         ),
                       ),
                     );
@@ -93,10 +146,7 @@ class _HomeContent extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/news-list');
-                  // → 次に渡す news_list_page.dart で解決
-                },
+                onPressed: () => Navigator.pushNamed(context, '/news-list'),
                 child: const Text(
                   'もっと見る',
                   style: TextStyle(
@@ -109,11 +159,13 @@ class _HomeContent extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // クイズカード
-            const FunctionCard(
+            // クイズカード（1日1回制限）
+            FunctionCard(
               imagePath: "assets/images/quiz.png",
               width: 450,
               height: 90,
+              isDisabled: !quizAvailable,
+              onTap: onQuizTap,
             ),
             const SizedBox(height: 20),
 
@@ -121,13 +173,31 @@ class _HomeContent extends StatelessWidget {
             Wrap(
               spacing: 50,
               runSpacing: 15,
-              children: const [
-                FunctionCard(imagePath: "assets/images/card1.png"),
-                FunctionCard(imagePath: "assets/images/card2.png"),
-                FunctionCard(imagePath: "assets/images/card3.png"),
-                FunctionCard(imagePath: "assets/images/card4.png"),
-                FunctionCard(imagePath: "assets/images/card5.png"),
-                FunctionCard(imagePath: "assets/images/card6.png"),
+              children: [
+                FunctionCard(
+                  imagePath: "assets/images/card1.png",
+                  onTap: () => Navigator.pushNamed(context, '/bosai'),
+                ),
+                FunctionCard(
+                  imagePath: "assets/images/card2.png",
+                  onTap: () => Navigator.pushNamed(context, '/bichiku'),
+                ),
+                FunctionCard(
+                  imagePath: "assets/images/card3.png",
+                  onTap: () => Navigator.pushNamed(context, '/ranking'),
+                ),
+                FunctionCard(
+                  imagePath: "assets/images/card4.png",
+                  onTap: () => Navigator.pushNamed(context, '/mypage'),
+                ),
+                FunctionCard(
+                  imagePath: "assets/images/card5.png",
+                  onTap: () => Navigator.pushNamed(context, '/map'),
+                ),
+                FunctionCard(
+                  imagePath: "assets/images/card6.png",
+                  onTap: () => Navigator.pushNamed(context, '/info'),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -138,17 +208,21 @@ class _HomeContent extends StatelessWidget {
   }
 }
 
-/// 共通 FunctionCard（hover対応）
+/// 共通 FunctionCard
 class FunctionCard extends StatefulWidget {
   final String imagePath;
   final double width;
   final double height;
+  final VoidCallback? onTap;
+  final bool isDisabled;
 
   const FunctionCard({
     super.key,
     required this.imagePath,
     this.width = 180,
     this.height = 110,
+    this.onTap,
+    this.isDisabled = false,
   });
 
   @override
@@ -160,31 +234,39 @@ class _FunctionCardState extends State<FunctionCard> {
 
   @override
   Widget build(BuildContext context) {
+    final opacity = widget.isDisabled ? 0.5 : 1.0;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedScale(
-        scale: _isHovered ? 1.05 : 1.0,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        child: Container(
-          width: widget.width,
-          height: widget.height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            image: DecorationImage(
-              image: AssetImage(widget.imagePath),
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF000000).withValues(alpha: 0.15),
-                blurRadius: 4,
-                spreadRadius: 1,
-                offset: const Offset(2, 3),
+      child: GestureDetector(
+        onTap: widget.isDisabled ? widget.onTap : widget.onTap,
+        child: AnimatedScale(
+          scale: _isHovered && !widget.isDisabled ? 1.05 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: Opacity(
+            opacity: opacity,
+            child: Container(
+              width: widget.width,
+              height: widget.height,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                image: DecorationImage(
+                  image: AssetImage(widget.imagePath),
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF000000).withValues(alpha: 0.15),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                    offset: const Offset(2, 3),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

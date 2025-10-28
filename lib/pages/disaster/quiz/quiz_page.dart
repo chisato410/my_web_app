@@ -17,12 +17,16 @@ class _QuizPageState extends State<QuizPage> {
     "家具が倒れないようにおさえる",
   ];
   final correctIndex = 0;
+
   int? selectedIndex;
+  bool isAnswered = false; // ✅ 回答済みフラグを追加
 
   void _checkAnswer(int index) {
+    if (isAnswered) return; // ✅ 既に回答していたら何もしない
     setState(() {
       selectedIndex = index;
       _state = index == correctIndex ? 'correct' : 'wrong';
+      isAnswered = true; // ✅ 回答済みに変更
     });
   }
 
@@ -114,7 +118,11 @@ class _QuizPageState extends State<QuizPage> {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE7B190),
+                          backgroundColor: isAnswered
+                              ? Colors
+                                    .grey
+                                    .shade400 // ✅ 回答後はグレー
+                              : const Color(0xFFE7B190),
                           foregroundColor: const Color(0xFF5C3B28),
                           padding: const EdgeInsets.symmetric(
                             vertical: 16,
@@ -125,7 +133,9 @@ class _QuizPageState extends State<QuizPage> {
                           ),
                           elevation: 0,
                         ),
-                        onPressed: () => _checkAnswer(i),
+                        onPressed: isAnswered
+                            ? null
+                            : () => _checkAnswer(i), // ✅ 無効化
                         child: Row(
                           children: [
                             CircleAvatar(
@@ -319,7 +329,7 @@ class _QuizPageState extends State<QuizPage> {
           ],
         ),
 
-        // 💡 肉球を Column の後に置くことで上に重なる
+        // 💡 肉球
         Positioned(
           top: 150,
           right: -10,

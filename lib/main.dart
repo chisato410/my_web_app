@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'firebase_options.dart';
 
+// ページのインポート
 import './pages/auth/login_page.dart';
-import 'firebase_options.dart'; // flutterfire configure で生成されたもの
+import 'pages/disaster/quiz/quiz_page.dart';
+import 'pages/disaster/bichiku/bichiku_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase 初期化
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Supabase 初期化
   await Supabase.initialize(
     url: 'https://zpjqejjemivvzyazfgiu.supabase.co',
     anonKey:
@@ -31,9 +32,13 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true, // ← M3対応UIならこちらを推奨
+        useMaterial3: true,
       ),
-      home: const LoginPage(), // ✅ ログインページを最初に表示
+      home: const LoginPage(),
+      routes: {
+        '/quiz': (context) => const QuizPage(), // ← これを追加
+        '/bichiku': (context) => const BichikuPage(),
+      },
     );
   }
 }
