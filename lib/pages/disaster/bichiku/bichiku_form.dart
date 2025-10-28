@@ -1,3 +1,4 @@
+// bichiku_form.dart
 import 'package:flutter/material.dart';
 
 class BichikuForm extends StatefulWidget {
@@ -26,14 +27,17 @@ class BichikuForm extends StatefulWidget {
 
 class _BichikuFormState extends State<BichikuForm> {
   late final TextEditingController _nameController;
+  late final TextEditingController _newCategoryController; // 🔸 新しいカテゴリ入力用
   String? selectedDate;
   String? selectedCategory;
   bool noExpiry = false;
+  bool addingNewCategory = false; // 🔸 「新しいカテゴリを追加中かどうか」
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName ?? '');
+    _newCategoryController = TextEditingController();
     selectedDate = widget.initialDate;
     selectedCategory = widget.initialCategory ?? widget.categories.first;
     noExpiry = widget.initialDate == '期限なし';
@@ -42,6 +46,7 @@ class _BichikuFormState extends State<BichikuForm> {
   @override
   void dispose() {
     _nameController.dispose();
+    _newCategoryController.dispose();
     super.dispose();
   }
 
@@ -49,7 +54,7 @@ class _BichikuFormState extends State<BichikuForm> {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      firstDate: now,
+      firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       initialDate: now,
     );
@@ -90,12 +95,25 @@ class _BichikuFormState extends State<BichikuForm> {
     if (!mounted) return;
 
     if (shouldDelete == true) {
-      // 親へ削除を通知（親がNavigator.popを呼ぶ）
       widget.onDelete?.call();
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('項目を削除しました')));
+    }
+  }
+
+  void _addNewCategory() {
+    final newCat = _newCategoryController.text.trim();
+    if (newCat.isNotEmpty && !widget.categories.contains(newCat)) {
+      setState(() {
+        widget.categories.add(newCat); // 🔸 新カテゴリをリストに追加
+        selectedCategory = newCat;
+        addingNewCategory = false;
+        _newCategoryController.clear();
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('「$newCat」をジャンルに追加しました')));
     }
   }
 
@@ -121,6 +139,7 @@ class _BichikuFormState extends State<BichikuForm> {
             ),
             const SizedBox(height: 16),
 
+            // 品名入力
             if (!isPreset)
               TextField(
                 controller: _nameController,
@@ -132,6 +151,7 @@ class _BichikuFormState extends State<BichikuForm> {
 
             if (!isPreset) const SizedBox(height: 16),
 
+            // 🔸 カテゴリ選択 or 新規追加
             DropdownButtonFormField<String>(
               value: widget.categories.contains(selectedCategory)
                   ? selectedCategory
@@ -140,17 +160,47 @@ class _BichikuFormState extends State<BichikuForm> {
                 labelText: 'ジャンルを選択',
                 border: OutlineInputBorder(),
               ),
-              items: widget.categories
-                  .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
-                  .toList(),
+              items: [
+                ...widget.categories.map(
+                  (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
+                ),
+                const DropdownMenuItem(
+                  value: '新しいジャンルを追加',
+                  child: Text('＋ 新しいジャンルを追加'),
+                ),
+              ],
               onChanged: (value) {
                 setState(() {
-                  selectedCategory = value;
+                  if (value == '新しいジャンルを追加') {
+                    addingNewCategory = true;
+                    selectedCategory = null;
+                  } else {
+                    addingNewCategory = false;
+                    selectedCategory = value;
+                  }
                 });
               },
             ),
+
+            // 🔸 新しいカテゴリ追加用のテキストフィールド
+            if (addingNewCategory) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _newCategoryController,
+                decoration: InputDecoration(
+                  labelText: '新しいジャンル名',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.check, color: Colors.green),
+                    onPressed: _addNewCategory,
+                  ),
+                ),
+              ),
+            ],
+
             const SizedBox(height: 16),
 
+            // 🔸 日付選択＋期限なしオプション
             Row(
               children: [
                 Expanded(
@@ -178,6 +228,7 @@ class _BichikuFormState extends State<BichikuForm> {
 
             const SizedBox(height: 24),
 
+            // 🔸 ボタン群
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -189,18 +240,29 @@ class _BichikuFormState extends State<BichikuForm> {
                     final name = _nameController.text.isNotEmpty
                         ? _nameController.text
                         : widget.initialName;
-                    if (name != null) {
-                      final newItem = {
-                        'name': name,
-                        'date': noExpiry ? '期限なし' : selectedDate,
-                        'category': selectedCategory,
-                      };
-                      widget.onSave(newItem);
-                      Navigator.pop(context, newItem);
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('$name を登録しました')));
+
+                    if (name == null || name.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('品名を入力してください')),
+                      );
+                      return;
                     }
+
+                    final newItem = {
+                      'name': name,
+                      'date': noExpiry ? '期限なし' : selectedDate,
+                      'category':
+                          selectedCategory ??
+                          (addingNewCategory
+                              ? _newCategoryController.text
+                              : widget.categories.first),
+                    };
+
+                    widget.onSave(newItem);
+                    Navigator.pop(context, newItem);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('$name を登録しました')));
                   },
                   child: const Text('登録する'),
                 ),
