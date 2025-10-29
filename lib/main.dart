@@ -1,12 +1,15 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'firebase_options.dart';
 
-// ページのインポート
-import './pages/auth/login_page.dart';
+// ページ
+import 'pages/auth/login_page.dart';
+import 'pages/home/home_page.dart'; // ← HomePageもインポート
 import 'pages/disaster/quiz/quiz_page.dart';
 import 'pages/disaster/bichiku/bichiku_page.dart';
+import 'pages/news/news_list_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,10 +37,13 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      initialRoute: '/login', // ← ログインから開始
       routes: {
-        '/quiz': (context) => const QuizPage(), // ← これを追加
+        '/login': (context) => const LoginPage(),
+        '/home': (context) => const HomePage(),
+        '/quiz': (context) => const QuizPage(),
         '/bichiku': (context) => const BichikuPage(),
+        '/news-list': (context) => const NewsListPage(),
       },
     );
   }

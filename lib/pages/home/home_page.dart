@@ -1,7 +1,8 @@
-// home_page.dart
+// lib/pages/home/home_page.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/news.dart';
+import '../news/news_detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -101,7 +102,7 @@ class _HomeContent extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // ニュースリスト
+            // ニュースリスト（最新3件）
             Column(
               children: mockNews.take(3).map((news) {
                 return ListTile(
@@ -130,10 +131,7 @@ class _HomeContent extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => Scaffold(
-                          appBar: AppBar(title: Text(news.title)),
-                          body: const Center(child: Text('ニュース詳細ページをここに作成')),
-                        ),
+                        builder: (_) => NewsDetailPage(news: news),
                       ),
                     );
                   },
@@ -240,7 +238,7 @@ class _FunctionCardState extends State<FunctionCard> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: widget.isDisabled ? widget.onTap : widget.onTap,
+        onTap: widget.onTap,
         child: AnimatedScale(
           scale: _isHovered && !widget.isDisabled ? 1.05 : 1.0,
           duration: const Duration(milliseconds: 200),
@@ -259,7 +257,7 @@ class _FunctionCardState extends State<FunctionCard> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF000000).withValues(alpha: 0.15),
+                    color: const Color(0xFF000000).withOpacity(0.15),
                     blurRadius: 4,
                     spreadRadius: 1,
                     offset: const Offset(2, 3),
