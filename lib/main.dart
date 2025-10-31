@@ -10,7 +10,7 @@ import 'pages/home/home_page.dart';
 import 'pages/disaster/quiz/quiz_page.dart';
 import 'pages/disaster/bichiku/bichiku_page.dart';
 import 'pages/news/news_list_page.dart';
-import 'pages/disaster/manuals/manual_list_page.dart';
+import 'pages/disaster/manuals/manual.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
