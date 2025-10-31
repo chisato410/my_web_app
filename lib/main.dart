@@ -6,10 +6,11 @@ import 'firebase_options.dart';
 
 // ページ
 import 'pages/auth/login_page.dart';
-import 'pages/home/home_page.dart'; // ← HomePageもインポート
+import 'pages/home/home_page.dart';
 import 'pages/disaster/quiz/quiz_page.dart';
 import 'pages/disaster/bichiku/bichiku_page.dart';
 import 'pages/news/news_list_page.dart';
+import 'pages/disaster/manuals/manual_list_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         '/quiz': (context) => const QuizPage(),
         '/bichiku': (context) => const BichikuPage(),
         '/news-list': (context) => const NewsListPage(),
+        '/manual': (context) => const ManualPage(),
       },
     );
   }

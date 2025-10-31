@@ -182,7 +182,7 @@ class _HomeContent extends StatelessWidget {
                 ),
                 FunctionCard(
                   imagePath: "assets/images/card3.png",
-                  onTap: () => Navigator.pushNamed(context, '/ranking'),
+                  onTap: () => Navigator.pushNamed(context, '/manual'),
                 ),
                 FunctionCard(
                   imagePath: "assets/images/card4.png",
