@@ -1,10 +1,18 @@
+// lib/pages/points/quest_page.dart
 import 'package:flutter/material.dart';
 
-class QuestPage extends StatelessWidget {
+class QuestPage extends StatefulWidget {
   final String title;
   final int point;
 
   const QuestPage({super.key, required this.title, required this.point});
+
+  @override
+  State<QuestPage> createState() => _QuestPageState();
+}
+
+class _QuestPageState extends State<QuestPage> {
+  bool isCompleted = false;
 
   @override
   Widget build(BuildContext context) {
@@ -19,41 +27,37 @@ class QuestPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              title,
+              widget.title,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            Text(
-              'このミッションを達成すると +$point pt 獲得できます。',
-              style: const TextStyle(fontSize: 14),
-            ),
+            Text('このミッションを達成すると +${widget.point} pt 獲得できます。'),
             const SizedBox(height: 40),
-
-            // 挑戦ボタン
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // contextの描画が安定してからダイアログを出す
-                  Future.delayed(Duration.zero, () {
-                    _showCompleteDialog(context);
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade200,
-                  minimumSize: const Size(160, 44),
+            if (!isCompleted)
+              Center(
+                child: ElevatedButton(
+                  onPressed: () => _showCompleteDialog(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade200,
+                    minimumSize: const Size(160, 44),
+                  ),
+                  child: const Text('挑戦する'),
                 ),
-                child: const Text('挑戦する'),
+              )
+            else
+              const Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.grey, size: 40),
+                    SizedBox(height: 8),
+                    Text('完了済み', style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
               ),
-            ),
-
             const Spacer(),
-
-            // 一覧に戻るボタン
             Center(
               child: TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                onPressed: () => Navigator.pop(context, isCompleted),
                 child: const Text(
                   '一覧に戻る',
                   style: TextStyle(color: Colors.grey),
@@ -66,31 +70,23 @@ class QuestPage extends StatelessWidget {
     );
   }
 
-  // 完了ポップアップ
   void _showCompleteDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('挑戦完了！'),
+        content: Text('「${widget.title}」を達成しました！\n+${widget.point} pt 獲得！'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              setState(() => isCompleted = true);
+            },
+            child: const Text('OK'),
           ),
-          title: const Text(
-            '挑戦完了！',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: Text('「$title」を達成しました！\n+$point pt 獲得！'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext); // ダイアログを閉じる
-                Navigator.pop(context); // 一覧に戻る
-              },
-              child: const Text('一覧に戻る'),
-            ),
-          ],
-        );
-      },
+        ],
+      ),
     );
   }
 }

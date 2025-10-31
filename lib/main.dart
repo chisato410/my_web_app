@@ -1,16 +1,22 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+import './pages/points/points_provider.dart';
 import 'firebase_options.dart';
 
-// ページ
+// ✅ Provider
+
+// ✅ ページ
 import 'pages/auth/login_page.dart';
 import 'pages/home/home_page.dart';
 import 'pages/disaster/quiz/quiz_page.dart';
 import 'pages/disaster/bichiku/bichiku_page.dart';
 import 'pages/news/news_list_page.dart';
 import 'pages/disaster/manuals/manual.dart';
+import 'pages/points/goods_exchange_page.dart';
+import 'pages/points/points_home_page.dart';
+import 'pages/points/goods_history_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +29,13 @@ Future<void> main() async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwanFlamplbWl2dnp5YXpmZ2l1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMzAxOTYsImV4cCI6MjA3MzkwNjE5Nn0.JzAtgJ3WIDxF_PPBo8404E9GIa-j1z5m8iBuC1oBS38',
   );
 
-  runApp(const MyApp());
+  runApp(
+    // ✅ Providerをアプリ全体に適用
+    ChangeNotifierProvider(
+      create: (_) => PointsProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -46,6 +58,9 @@ class MyApp extends StatelessWidget {
         '/bichiku': (context) => const BichikuPage(),
         '/news-list': (context) => const NewsListPage(),
         '/manual': (context) => const ManualPage(),
+        '/points_home': (context) => const PointPage(), // ✅ 追加
+        '/goods_exchange': (context) => const GoodsExchangePage(),
+        '/goods_history': (context) => const GoodsHistoryPage(),
       },
     );
   }

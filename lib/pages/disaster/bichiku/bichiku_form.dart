@@ -27,11 +27,11 @@ class BichikuForm extends StatefulWidget {
 
 class _BichikuFormState extends State<BichikuForm> {
   late final TextEditingController _nameController;
-  late final TextEditingController _newCategoryController; // 🔸 新しいカテゴリ入力用
+  late final TextEditingController _newCategoryController;
   String? selectedDate;
   String? selectedCategory;
   bool noExpiry = false;
-  bool addingNewCategory = false; // 🔸 「新しいカテゴリを追加中かどうか」
+  bool addingNewCategory = false;
 
   @override
   void initState() {
@@ -106,7 +106,7 @@ class _BichikuFormState extends State<BichikuForm> {
     final newCat = _newCategoryController.text.trim();
     if (newCat.isNotEmpty && !widget.categories.contains(newCat)) {
       setState(() {
-        widget.categories.add(newCat); // 🔸 新カテゴリをリストに追加
+        widget.categories.add(newCat);
         selectedCategory = newCat;
         addingNewCategory = false;
         _newCategoryController.clear();
@@ -139,7 +139,6 @@ class _BichikuFormState extends State<BichikuForm> {
             ),
             const SizedBox(height: 16),
 
-            // 品名入力
             if (!isPreset)
               TextField(
                 controller: _nameController,
@@ -151,9 +150,8 @@ class _BichikuFormState extends State<BichikuForm> {
 
             if (!isPreset) const SizedBox(height: 16),
 
-            // 🔸 カテゴリ選択 or 新規追加
             DropdownButtonFormField<String>(
-              value: widget.categories.contains(selectedCategory)
+              initialValue: widget.categories.contains(selectedCategory)
                   ? selectedCategory
                   : widget.categories.first,
               decoration: const InputDecoration(
@@ -182,7 +180,6 @@ class _BichikuFormState extends State<BichikuForm> {
               },
             ),
 
-            // 🔸 新しいカテゴリ追加用のテキストフィールド
             if (addingNewCategory) ...[
               const SizedBox(height: 12),
               TextField(
@@ -200,7 +197,6 @@ class _BichikuFormState extends State<BichikuForm> {
 
             const SizedBox(height: 16),
 
-            // 🔸 日付選択＋期限なしオプション
             Row(
               children: [
                 Expanded(
@@ -228,7 +224,6 @@ class _BichikuFormState extends State<BichikuForm> {
 
             const SizedBox(height: 24),
 
-            // 🔸 ボタン群
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

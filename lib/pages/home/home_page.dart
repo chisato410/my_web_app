@@ -257,7 +257,7 @@ class _FunctionCardState extends State<FunctionCard> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF000000).withOpacity(0.15),
+                    color: const Color(0xFF000000).withValues(alpha: 0.15),
                     blurRadius: 4,
                     spreadRadius: 1,
                     offset: const Offset(2, 3),
