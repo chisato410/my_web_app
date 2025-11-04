@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
         '/bichiku': (context) => const BichikuPage(),
         '/news-list': (context) => const NewsListPage(),
         '/manual': (context) => const ManualPage(),
-        '/points_home': (context) => const PointPage(), // ✅ 追加
+        '/points_home': (context) => const PointPage(),
         '/goods_exchange': (context) => const GoodsExchangePage(),
         '/goods_history': (context) => const GoodsHistoryPage(),
       },
