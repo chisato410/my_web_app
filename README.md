@@ -152,7 +152,3 @@ git push origin feature/〇〇
 - Refactor: リファクタリング
 
 ⸻
-
-## ✅ 今後のタスク
-
-issue で確認してください。
